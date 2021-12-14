@@ -8,7 +8,6 @@
 
 // Make these tests pass! Execute `rustlings hint errors6` for hints :)
 
-// I AM NOT DONE
 
 use std::num::ParseIntError;
 
@@ -32,10 +31,12 @@ impl ParsePosNonzeroError {
 fn parse_pos_nonzero(s: &str) -> Result<PositiveNonzeroInteger, ParsePosNonzeroError> {
     // TODO: change this to return an appropriate error instead of panicking
     // when `parse()` returns an error.
-    let x: i64 = match s.parse() {
-      Ok(x) => x,
-      Err(err) => return Err(ParsePosNonzeroError::from_intparse(err))
-    };
+    let x: i64 = s.parse::<i64>().map_err(ParsePosNonzeroError::from_intparse)?;
+     
+    // let x: i64 = match s.parse() {
+    //   Ok(x) => x,
+    //   Err(err) => return Err(ParsePosNonzeroError::from_intparse(err))
+    // };
     PositiveNonzeroInteger::new(x).map_err(ParsePosNonzeroError::from_creation)
 }
 
