@@ -16,7 +16,6 @@
 // 4. Complete the partial implementation of `Display` for
 //    `ParseClimateError`.
 
-// I AM NOT DONE
 
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
@@ -34,6 +33,8 @@ enum ParseClimateError {
     ParseFloat(ParseFloatError),
 }
 
+impl Error for ParseClimateError {}
+
 // This `From` implementation allows the `?` operator to work on
 // `ParseIntError` values.
 impl From<ParseIntError> for ParseClimateError {
@@ -46,7 +47,7 @@ impl From<ParseIntError> for ParseClimateError {
 // `ParseFloatError` values.
 impl From<ParseFloatError> for ParseClimateError {
     fn from(e: ParseFloatError) -> Self {
-        // TODO: Complete this function
+        Self::ParseFloat(e)
     }
 }
 
@@ -64,6 +65,9 @@ impl Display for ParseClimateError {
         match self {
             NoCity => write!(f, "no city name"),
             ParseFloat(e) => write!(f, "error parsing temperature: {}", e),
+            Empty => write!(f, "empty input"),
+            BadLen => write!(f, "incorrect number of fields"),
+            ParseInt(e) => write!(f, "error parsing year: {}", e),
         }
     }
 }
@@ -79,7 +83,7 @@ struct Climate {
 // 1. Split the input string into 3 fields: city, year, temp.
 // 2. Return an error if the string is empty or has the wrong number of
 //    fields.
-// 3. Return an error if the city name is empty.
+// 3. Return an error if the city name is empty. NoCity
 // 4. Parse the year as a `u32` and return an error if that fails.
 // 5. Parse the temp as a `f32` and return an error if that fails.
 // 6. Return an `Ok` value containing the completed `Climate` value.
@@ -88,6 +92,9 @@ impl FromStr for Climate {
     // TODO: Complete this function by making it handle the missing error
     // cases.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.len() == 0 {
+            return Err(ParseClimateError::Empty);
+        }
         let v: Vec<_> = s.split(',').collect();
         let (city, year, temp) = match &v[..] {
             [city, year, temp] => (city.to_string(), year, temp),
@@ -95,6 +102,9 @@ impl FromStr for Climate {
         };
         let year: u32 = year.parse()?;
         let temp: f32 = temp.parse()?;
+        if city.len() == 0 {
+            return Err(ParseClimateError::NoCity);
+        }
         Ok(Climate { city, year, temp })
     }
 }

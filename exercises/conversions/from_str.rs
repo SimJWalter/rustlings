@@ -26,7 +26,6 @@ enum ParsePersonError {
     ParseInt(ParseIntError),
 }
 
-// I AM NOT DONE
 
 // Steps:
 // 1. If the length of the provided string is 0, an error should be returned
@@ -41,6 +40,40 @@ enum ParsePersonError {
 impl FromStr for Person {
     type Err = ParsePersonError;
     fn from_str(s: &str) -> Result<Person, Self::Err> {
+        if s.trim().len() == 0 {
+            return Err(ParsePersonError::Empty);
+        } else {
+            let mut toks: Vec<&str> = s.split(',').map(|tok| tok.trim()).collect();
+            if toks.len() != 2 {
+                return Err(ParsePersonError::BadLen);
+            } else {
+                let mut errs: Vec<ParsePersonError> = Vec::new();
+
+                let age = match toks.pop().unwrap().parse::<usize>() {
+                    Ok(num) => num,
+                    Err(err) => {
+                        errs.push(ParsePersonError::ParseInt(err));
+                        0
+                    }
+                };
+
+                let name = toks.pop().unwrap().to_string();
+                if name.len() == 0 {
+                    errs.push(ParsePersonError::NoName);
+                }
+
+                if errs.len() > 0 {
+                    return Err(errs.pop().unwrap()); // let _temp  = errs.iter().fold(None, |acc, val| { acc.unwrap() | val}).unwrap();
+
+                    // return Err(errs.iter().fold(None, |acc, &val| { acc.unwrap() | val}).unwrap());
+                };
+
+                return Ok(Person {
+                    name: name.to_string(),
+                    age,
+                });
+            }
+        }
     }
 }
 
@@ -56,39 +89,6 @@ mod tests {
     #[test]
     fn empty_input() {
         assert_eq!("".parse::<Person>(), Err(ParsePersonError::Empty));
-    }
-    #[test]
-    fn good_input() {
-        let p = "John,32".parse::<Person>();
-        assert!(p.is_ok());
-        let p = p.unwrap();
-        assert_eq!(p.name, "John");
-        assert_eq!(p.age, 32);
-    }
-    #[test]
-    fn missing_age() {
-        assert!(matches!(
-            "John,".parse::<Person>(),
-            Err(ParsePersonError::ParseInt(_))
-        ));
-    }
-
-    #[test]
-    fn invalid_age() {
-        assert!(matches!(
-            "John,twenty".parse::<Person>(),
-            Err(ParsePersonError::ParseInt(_))
-        ));
-    }
-
-    #[test]
-    fn missing_comma_and_age() {
-        assert_eq!("John".parse::<Person>(), Err(ParsePersonError::BadLen));
-    }
-
-    #[test]
-    fn missing_name() {
-        assert_eq!(",1".parse::<Person>(), Err(ParsePersonError::NoName));
     }
 
     #[test]
@@ -108,6 +108,32 @@ mod tests {
     }
 
     #[test]
+    fn invalid_age() {
+        assert!(matches!(
+            "John,twenty".parse::<Person>(),
+            Err(ParsePersonError::ParseInt(_))
+        ));
+    }
+
+    #[test]
+    fn missing_age() {
+        assert!(matches!(
+            "John,".parse::<Person>(),
+            Err(ParsePersonError::ParseInt(_))
+        ));
+    }
+
+    #[test]
+    fn missing_comma_and_age() {
+        assert_eq!("John".parse::<Person>(), Err(ParsePersonError::BadLen));
+    }
+
+    #[test]
+    fn missing_name() {
+        assert_eq!(",1".parse::<Person>(), Err(ParsePersonError::NoName));
+    }
+
+    #[test]
     fn trailing_comma() {
         assert_eq!("John,32,".parse::<Person>(), Err(ParsePersonError::BadLen));
     }
@@ -118,5 +144,14 @@ mod tests {
             "John,32,man".parse::<Person>(),
             Err(ParsePersonError::BadLen)
         );
+    }
+
+    #[test]
+    fn good_input() {
+        let p = "John,32".parse::<Person>();
+        assert!(p.is_ok());
+        let p = p.unwrap();
+        assert_eq!(p.name, "John");
+        assert_eq!(p.age, 32);
     }
 }

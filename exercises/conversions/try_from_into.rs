@@ -12,16 +12,21 @@ struct Color {
     blue: u8,
 }
 
+impl Color {
+    pub fn validate_num(v: i16) -> Result<u8, IntoColorError> {
+        Ok(u8::try_from(v).map_err(|_| IntoColorError::IntConversion)?)
+    }
+}
+
 // We will use this error type for these `TryFrom` conversions.
 #[derive(Debug, PartialEq)]
 enum IntoColorError {
     // Incorrect length of slice
     BadLen,
     // Integer conversion error
-    IntConversion,
+    IntConversion
 }
 
-// I AM NOT DONE
 
 // Your task is to complete this implementation
 // and return an Ok result of inner type Color.
@@ -36,6 +41,12 @@ enum IntoColorError {
 impl TryFrom<(i16, i16, i16)> for Color {
     type Error = IntoColorError;
     fn try_from(tuple: (i16, i16, i16)) -> Result<Self, Self::Error> {
+        let ret = Self {
+            red: Self::validate_num(tuple.0)?,
+            green: Self::validate_num(tuple.1)?,
+            blue: Self::validate_num(tuple.2)?,
+        };
+        Ok(ret)
     }
 }
 
@@ -43,6 +54,12 @@ impl TryFrom<(i16, i16, i16)> for Color {
 impl TryFrom<[i16; 3]> for Color {
     type Error = IntoColorError;
     fn try_from(arr: [i16; 3]) -> Result<Self, Self::Error> {
+        let ret = Self {
+            red: Self::validate_num(arr[0])?,
+            green: Self::validate_num(arr[1])?,
+            blue: Self::validate_num(arr[2])?,
+        };
+        Ok(ret)
     }
 }
 
@@ -50,6 +67,15 @@ impl TryFrom<[i16; 3]> for Color {
 impl TryFrom<&[i16]> for Color {
     type Error = IntoColorError;
     fn try_from(slice: &[i16]) -> Result<Self, Self::Error> {
+        if slice.len() == 3 {
+            Ok(Self {
+                red: Self::validate_num(slice[0])?,
+                green: Self::validate_num(slice[1])?,
+                blue: Self::validate_num(slice[2])?,
+            })
+        } else {
+            Err(IntoColorError::BadLen)
+        }
     }
 }
 
@@ -82,6 +108,7 @@ mod tests {
             Err(IntoColorError::IntConversion)
         );
     }
+
     #[test]
     fn test_tuple_out_of_range_negative() {
         assert_eq!(
